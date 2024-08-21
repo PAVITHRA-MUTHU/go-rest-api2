@@ -23,6 +23,19 @@ func getMockWeatherData(city, date string) float64 {
 	return 75.5
 }
 
+// logRequestMiddleware that logs each and every incoming request.
+
+func logRequestMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Log request details
+		fmt.Printf("Received %s request for %s\n", r.Method, r.URL.Path)
+		//fmt.Printf("Headers: %v\n", r.Header)
+
+		// Call the next handler in the chain
+		next.ServeHTTP(w, r)
+	})
+}
+
 // weatherHandler handles the GET request for the weather data
 func weatherHandler(w http.ResponseWriter, r *http.Request) {
 	city := chi.URLParam(r, "city")
@@ -62,6 +75,7 @@ func main() {
 	//Adding middleware for logging and recovering from panics.
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(logRequestMiddleware)
 
 	// set up /v1/weather endpoint
 	r.Get("/v1/weather/{city}", weatherHandler)
